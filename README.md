@@ -37,6 +37,15 @@ ssh brad@raspberrypi 'sudo bash ./scripts/tailscale.sh'
 ssh brad@raspberrypi 'sudo tailscale up'
 ```
 
+### Monitoring
+
+Because why run services if we aren't sure it's working and how much resources
+it's taking up?
+
+Using Grafana by just following their Linux quick start guide:
+https://grafana.com/docs/grafana-cloud/data-configuration/get-started-integration/
+Private dashboard with the default integration dashboard: https://bradschwartz.grafana.net/d/fa49a4706d07a042595b664c87fb33ea/node-exporter-nodes?orgId=1&refresh=30s
+
 ## Useful Commands
 
 ```bash
