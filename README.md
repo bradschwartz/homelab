@@ -46,6 +46,22 @@ Using Grafana by just following their Linux quick start guide:
 https://grafana.com/docs/grafana-cloud/data-configuration/get-started-integration/
 Private dashboard with the default integration dashboard: https://bradschwartz.grafana.net/d/fa49a4706d07a042595b664c87fb33ea/node-exporter-nodes?orgId=1&refresh=30s
 
+### Public Access
+
+Why run things if we can't show people?
+
+[Fly][https://fly.io] has a generous free tier and is super easy to deploy - I
+(ab)use it for my [protohackers](https://protohackers.com/) [solutions](https://github.com/bradschwartz/protohackers).
+Let's use it here to act as a web proxy for the Pi by connecting everything over
+the tailscale network. Mainly following the [tailscale docs](https://tailscale.com/kb/1132/flydotio/)
+on this.
+
+1. Generate a new Tailscale auth token (Reusable, Ephemeral)
+1. `flyctl secrets set TAILSCALE_AUTHKEY="${TAILSCALE_AUTHKEY}"`
+1. Build a [Dockerfile](./proxy/Dockerfile)!
+   - Need to run with `--privileged` flag locally
+1. `flyctl deploy --local-only`
+
 ## Useful Commands
 
 ```bash
