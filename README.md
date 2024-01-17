@@ -62,6 +62,34 @@ on this.
    - Need to run with `--privileged` flag locally
 1. `flyctl deploy --local-only`
 
+### K3s - Single Node K8s Cluster
+
+Mainly just following the https://docs.k3s.io/quick-start guide:
+
+```bash
+curl -sfL https://get.k3s.io | sh -
+# result in some errors, the important bit:
+# [INFO]  Failed to find memory cgroup, you may need to add "cgroup_memory=1 cgroup_enable=memory" to your linux cmdline (/boot/cmdline.txt on a Raspberry Pi)
+# Restarted k3s after editing that file:
+echo "console=serial0,115200 console=tty1 root=PARTUUID=48c544c0-02 rootfstype=ext4 fsck.repair=yes rootwait cgroup_memory=1 cgroup_enable=memory" | sudo tee /boot/cmdline.txt
+sudo reboot # to have changes take effect
+sudo systemctl restart k3s.service
+sudo chmod ugo+rwx /etc/rancher/k3s/k3s.yaml # can scp to local and change `server` to access remotely
+```
+
+You'll need to generate Docker auths for any registries. In my case, I needed
+a GitHub PAT. The auth file is located at `/etc/rancher/k3s/registries.yaml`:
+
+```yaml
+configs:
+  ghcr.io:
+    auth:
+      username: bradschwartz
+      password: ${GH_PAT}
+```
+
+Make sure to restart k3s afterwards.
+
 ## Useful Commands
 
 ```bash
