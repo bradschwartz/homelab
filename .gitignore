@@ -1,2 +1,22 @@
-venv/
+# Ansible
+ansible/*.retry
+
+# Kubernetes
+.kube/
+
+# Secrets / env
 .env
+.env.local
+
+# IDE
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temp
+tmp/

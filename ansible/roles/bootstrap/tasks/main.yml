@@ -1,0 +1,59 @@
+---
+- name: Wait for system to be reachable
+  ansible.builtin.wait_for_connection:
+    delay: 5
+    timeout: 60
+
+- name: Set hostname
+  ansible.builtin.hostname:
+    name: raspberrypi
+
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: yes
+    cache_valid_time: 3600
+
+- name: Install required packages
+  ansible.builtin.apt:
+    name:
+      - curl
+      - gnupg
+      - git
+      - htop
+      - tmux
+      - tree
+      - avahi-daemon
+      - unattended-upgrades
+    state: present
+
+- name: Disable swap
+  ansible.builtin.shell:
+    cmd: |
+      swapoff -a
+      sed -i '/swap/d' /etc/fstab
+    executable: /bin/bash
+  changed_when: false
+
+- name: Load kernel modules for k3s
+  ansible.builtin.command:
+    cmd: modprobe {{ item }}
+  loop:
+    - overlay
+    - br_netfilter
+  changed_when: false
+
+- name: Configure sysctl for Kubernetes
+  ansible.builtin.sysctl:
+    name: "{{ item.key }}"
+    value: "{{ item.value }}"
+    state: present
+    reload: yes
+  with_items:
+    - { key: net.ipv4.ip_forward, value: "1" }
+    - { key: net.bridge.bridge-nf-call-iptables, value: "1" }
+    - { key: net.bridge.bridge-nf-call-ip6tables, value: "1" }
+
+- name: Enable unattended-upgrades
+  ansible.builtin.dpkg_selections:
+    name: unattended-upgrades
+    selection: install
