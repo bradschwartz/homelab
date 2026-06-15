@@ -1,0 +1,29 @@
+---
+- name: Create .kube directory on control host
+  ansible.builtin.file:
+    path: "{{ lookup('env', 'HOME') }}/.kube"
+    state: directory
+    mode: "0700"
+  delegate_to: localhost
+  become: no
+
+- name: Fetch k3s kubeconfig
+  ansible.builtin.fetch:
+    src: /etc/rancher/k3s/k3s.yaml
+    dest: "{{ lookup('env', 'HOME') }}/.kube/raspberrypi-config"
+    flat: yes
+
+- name: Set kubeconfig server address
+  ansible.builtin.lineinfile:
+    path: "{{ lookup('env', 'HOME') }}/.kube/raspberrypi-config"
+    regexp: "^    server: https://127.0.0.1:6443"
+    line: "    server: https://{{ tailscale_ip | default(ansible_host) }}:6443"
+  delegate_to: localhost
+  become: no
+
+- name: Set kubeconfig permissions
+  ansible.builtin.file:
+    path: "{{ lookup('env', 'HOME') }}/.kube/raspberrypi-config"
+    mode: "0600"
+  delegate_to: localhost
+  become: no

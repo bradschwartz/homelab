@@ -1,0 +1,8 @@
+---
+all:
+  hosts:
+    raspberrypi:
+      ansible_host: "{{ lookup('env', 'PI_HOST') | default('raspberrypi', true) }}"
+      ansible_user: "{{ lookup('env', 'PI_USER') | default('brad', true) }}"
+      ansible_port: 22
+      tailscale_auth_key: "{{ lookup('env', 'TAILSCALE_AUTH_KEY') | default('', true) }}"

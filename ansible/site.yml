@@ -1,0 +1,23 @@
+---
+- name: Bootstrap Pi and install k3s
+  hosts: raspberrypi
+  become: yes
+  roles:
+    - bootstrap
+    - tailscale
+    - k3s
+
+- name: Fetch kubeconfig and prep for Flux
+  hosts: raspberrypi
+  become: yes
+  roles:
+    - flux
+  post_tasks:
+    - name: Print next steps
+      ansible.builtin.debug:
+        msg:
+          - "k3s is installed and kubeconfig saved to ~/.kube/raspberrypi-config"
+          - "Run the following to bootstrap Flux:"
+          - "  export GITHUB_TOKEN=your_personal_access_token"
+          - "  export GITHUB_USER=your_github_username"
+          - "  make flux"
