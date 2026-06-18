@@ -9,7 +9,8 @@ k3s on a Raspberry Pi 4, bootstrapped with Ansible and managed via Flux GitOps.
 make setup
 
 # 2. Bootstrap Pi with k3s
-export TAILSCALE_AUTH_KEY=tskey-auth-xxxxx
+export TS_OAUTH_CLIENT_ID=k123456CNTRL
+export TS_OAUTH_CLIENT_SECRET=tskey-client-k123456CNTRL-xxxxx
 make ansible
 
 # 3. Bootstrap Flux
@@ -66,4 +67,4 @@ The operator creates a Tailscale node for that service. Access it via `http://se
 
 ## Environment Variables
 
-See `.env.example` — or set `PI_HOST`, `PI_USER`, `TAILSCALE_AUTH_KEY`, `GITHUB_TOKEN`, `GITHUB_USER` directly.
+See `.env.example` — or set `PI_HOST`, `PI_USER`, `TS_OAUTH_CLIENT_ID`, `TS_OAUTH_CLIENT_SECRET`, `GITHUB_TOKEN`, `GITHUB_USER` directly.

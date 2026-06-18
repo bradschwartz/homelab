@@ -14,6 +14,7 @@ metadata:
   name: tailscale-operator
   namespace: flux-system
 spec:
+  targetNamespace: tailscale
   interval: 1h
   chart:
     spec:
@@ -22,11 +23,15 @@ spec:
         kind: HelmRepository
         name: tailscale
       interval: 1h
+  valuesFrom:
+    - kind: Secret
+      name: tailscale-auth
+      valuesKey: client_id
+      targetPath: oauth.clientId
+    - kind: Secret
+      name: tailscale-auth
+      valuesKey: client_secret
+      targetPath: oauth.clientSecret
   values:
-    operatorConfig:
-      authKey:
-        secretRef:
-          name: tailscale-auth
-    # To expose a service via Tailscale, annotate it with:
+    # To expose a service, annotate it with:
     #   tailscale.com/expose: "true"
-    # The operator handles the rest.

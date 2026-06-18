@@ -28,17 +28,27 @@
   delegate_to: localhost
   become: no
 
+- name: Create tailscale namespace
+  ansible.builtin.command:
+    cmd: k3s kubectl create namespace tailscale
+  register: tailscale_ns
+  changed_when: tailscale_ns.rc == 0
+  failed_when: tailscale_ns.rc != 0 and 'already exists' not in tailscale_ns.stderr
+  when: tailscale_oauth_client_id | length > 0 and tailscale_oauth_client_secret | length > 0
+
 - name: Check if Tailscale auth secret exists
   ansible.builtin.command:
     cmd: k3s kubectl get secret tailscale-auth -n flux-system
   register: tailscale_secret_check
   changed_when: false
   failed_when: false
+  when: tailscale_oauth_client_id | length > 0 and tailscale_oauth_client_secret | length > 0
 
-- name: Create Tailscale auth secret
+- name: Create Tailscale OAuth secret
   ansible.builtin.shell:
-    cmd: k3s kubectl create secret generic tailscale-auth -n flux-system --from-literal=TS_AUTH_KEY={{ tailscale_auth_key }}
+    cmd: k3s kubectl create secret generic tailscale-auth -n flux-system --from-literal=client_id={{ tailscale_oauth_client_id }} --from-literal=client_secret={{ tailscale_oauth_client_secret }}
     executable: /bin/bash
   when:
-    - tailscale_auth_key | length > 0
+    - tailscale_oauth_client_id | length > 0
+    - tailscale_oauth_client_secret | length > 0
     - tailscale_secret_check.rc != 0
