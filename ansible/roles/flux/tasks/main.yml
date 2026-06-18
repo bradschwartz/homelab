@@ -17,7 +17,7 @@
   ansible.builtin.lineinfile:
     path: "{{ lookup('env', 'HOME') }}/.kube/raspberrypi-config"
     regexp: "^    server: https://127.0.0.1:6443"
-    line: "    server: https://{{ tailscale_ip | default(ansible_host) }}:6443"
+    line: "    server: https://{{ ansible_host }}:6443"
   delegate_to: localhost
   become: no
 
@@ -27,3 +27,18 @@
     mode: "0600"
   delegate_to: localhost
   become: no
+
+- name: Check if Tailscale auth secret exists
+  ansible.builtin.command:
+    cmd: k3s kubectl get secret tailscale-auth -n flux-system
+  register: tailscale_secret_check
+  changed_when: false
+  failed_when: false
+
+- name: Create Tailscale auth secret
+  ansible.builtin.shell:
+    cmd: k3s kubectl create secret generic tailscale-auth -n flux-system --from-literal=TS_AUTH_KEY={{ tailscale_auth_key }}
+    executable: /bin/bash
+  when:
+    - tailscale_auth_key | length > 0
+    - tailscale_secret_check.rc != 0

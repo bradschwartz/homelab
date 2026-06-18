@@ -1,11 +1,7 @@
 ---
 write-kubeconfig-mode: "0644"
 tls-san:
-{% if tailscale_ip is defined and tailscale_ip | length > 0 %}
-  - {{ tailscale_ip }}
-{% endif %}
   - raspberrypi
-  - {{ ansible_host }}
 disable:
   - traefik
 kube-controller-manager-arg:

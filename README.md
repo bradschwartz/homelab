@@ -8,16 +8,19 @@ k3s on a Raspberry Pi 4, bootstrapped with Ansible and managed via Flux GitOps.
 # 1. Install prerequisites (brew)
 make setup
 
-# 2. Configure Pi for Ansible (passwordless sudo)
-make setup-pi
-
-# 3. Bootstrap Pi with k3s + Tailscale
+# 2. Bootstrap Pi with k3s
+export TAILSCALE_AUTH_KEY=tskey-auth-xxxxx
 make ansible
 
-# 4. Bootstrap Flux (set GITHUB_TOKEN and GITHUB_USER first)
+# 3. Bootstrap Flux
 export GITHUB_TOKEN=ghp_xxx
-export GITHUB_USER=your_username
+export GITHUB_USER=bradschwartz
 make flux
+
+# 4. Expose a service via Tailscale:
+#    Add to your app's Deployment:
+#      tailscale.com/expose: "true"
+#    The operator gives it a tailnet IP automatically.
 ```
 
 ## Structure
@@ -29,7 +32,6 @@ ansible/            # Ansible playbooks for Pi provisioning
   site.yml          #   Main playbook
   roles/
     bootstrap/      #   OS hardening, packages, kernel config
-    tailscale/      #   Install and auth Tailscale
     k3s/            #   Install k3s single-node cluster
     flux/           #   Fetch kubeconfig for local use
 clusters/
@@ -50,6 +52,18 @@ scripts/            # Helper scripts
 | `make status` | Check Pi and k3s status |
 | `make clean` | Remove local kubeconfig |
 
+## Exposing Services via Tailscale
+
+The cluster has the [tailscale-operator](https://tailscale.com/kb/1236/kubernetes-operator) installed. To expose any service on your tailnet, add the annotation to its metadata:
+
+```yaml
+metadata:
+  annotations:
+    tailscale.com/expose: "true"
+```
+
+The operator creates a Tailscale node for that service. Access it via `http://service-name` (MagicDNS) or the Tailscale IP from the admin console.
+
 ## Environment Variables
 
-See `.env.example` — or set `PI_HOST`, `PI_USER`, `GITHUB_TOKEN`, `GITHUB_USER` directly.
+See `.env.example` — or set `PI_HOST`, `PI_USER`, `TAILSCALE_AUTH_KEY`, `GITHUB_TOKEN`, `GITHUB_USER` directly.

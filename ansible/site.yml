@@ -4,7 +4,6 @@
   become: yes
   roles:
     - bootstrap
-    - tailscale
     - k3s
 
 - name: Fetch kubeconfig and prep for Flux
