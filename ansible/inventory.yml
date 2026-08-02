@@ -7,3 +7,4 @@ all:
       ansible_port: 22
       tailscale_oauth_client_id: "{{ lookup('env', 'TS_OAUTH_CLIENT_ID') | default('', true) }}"
       tailscale_oauth_client_secret: "{{ lookup('env', 'TS_OAUTH_CLIENT_SECRET') | default('', true) }}"
+      github_arc_pat: "{{ lookup('env', 'GITHUB_ARC_PAT') | default('', true) }}"

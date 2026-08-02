@@ -4,3 +4,5 @@ kind: Kustomization
 resources:
   - controllers/tailscale-ns.yaml
   - controllers/tailscale-operator.yaml
+  - controllers/arc-systems-ns.yaml
+  - controllers/arc-controller.yaml

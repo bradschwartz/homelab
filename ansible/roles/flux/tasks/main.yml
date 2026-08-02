@@ -52,3 +52,27 @@
     - tailscale_oauth_client_id | length > 0
     - tailscale_oauth_client_secret | length > 0
     - tailscale_secret_check.rc != 0
+
+- name: Create arc-runners namespace
+  ansible.builtin.command:
+    cmd: k3s kubectl create namespace arc-runners
+  register: arc_ns
+  changed_when: arc_ns.rc == 0
+  failed_when: arc_ns.rc != 0 and 'already exists' not in arc_ns.stderr
+  when: github_arc_pat | length > 0
+
+- name: Check if GitHub ARC secret exists
+  ansible.builtin.command:
+    cmd: k3s kubectl get secret github-arc-secret -n arc-runners
+  register: arc_secret_check
+  changed_when: false
+  failed_when: false
+  when: github_arc_pat | length > 0
+
+- name: Create GitHub ARC secret
+  ansible.builtin.shell:
+    cmd: k3s kubectl create secret generic github-arc-secret -n arc-runners --from-literal=github_token={{ github_arc_pat }}
+    executable: /bin/bash
+  when:
+    - github_arc_pat | length > 0
+    - arc_secret_check.rc != 0

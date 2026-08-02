@@ -6,9 +6,10 @@ Raspberry Pi 4 k3s cluster managed via Ansible + Flux GitOps, with Tailscale ope
 
 - **Pi OS** on Raspberry Pi 4, hostname `raspberrypi`, user `brad`
 - **Cloud-init** (`pi/user-data`, `pi/network-config`) for initial OS boot config
-- **Ansible** provisions: swap off, kernel modules, sysctl, k3s (no traefik), kubeconfig fetch, tailscale-auth secret
+- **Ansible** provisions: swap off, kernel modules, sysctl, k3s (no traefik), kubeconfig fetch, tailscale-auth secret, github-arc-secret
 - **Flux** (bootstrapped via `make flux`) syncs Git repo paths: `clusters/raspberrypi/` → `infrastructure/` → `apps/`
 - **Tailscale operator** runs in-cluster in `tailscale` namespace, uses OAuth credentials from `flux-system/tailscale-auth` secret
+- **Actions Runner Controller (ARC)** runs in-cluster in `arc-systems` namespace; runner scale set in `arc-runners` namespace, PAT from `github-arc-secret`
 
 ## Required env vars
 
@@ -19,6 +20,7 @@ TS_OAUTH_CLIENT_ID=...
 TS_OAUTH_CLIENT_SECRET=...
 GITHUB_TOKEN=...
 GITHUB_USER=bradschwartz
+GITHUB_ARC_PAT=...
 ```
 
 ## Commands
@@ -47,11 +49,16 @@ clusters/raspberrypi/
 infrastructure/
 ├── kustomization.yaml
 └── controllers/
-    ├── tailscale-ns.yaml        # creates tailscale namespace (privileged Pod Security)
-    └── tailscale-operator.yaml  # HelmRepository + HelmRelease (targetNamespace: tailscale)
+    ├── tailscale-ns.yaml          # creates tailscale namespace (privileged Pod Security)
+    ├── tailscale-operator.yaml    # HelmRepository + HelmRelease (targetNamespace: tailscale)
+    ├── arc-systems-ns.yaml        # creates arc-systems namespace (ARC controller)
+    └── arc-controller.yaml        # HelmRepository (OCI) + HelmRelease for gha-runner-scale-set-controller
 
 apps/
-└── kustomization.yaml
+├── kustomization.yaml
+└── arc/
+    ├── arc-runners-ns.yaml        # creates arc-runners namespace (privileged Pod Security)
+    └── arc-runner-set.yaml        # HelmRepository (OCI) + HelmRelease for gha-runner-scale-set
 ```
 
 ## Key constraints
@@ -60,10 +67,11 @@ apps/
 - **Flux bootstrap** pushes manifests via GitHub API — run `git pull` locally after `make flux`
 - **Tailscale operator** requires `tag:k8s-operator` to exist in the tailnet ACLs/Tags section at https://login.tailscale.com/admin/acls
 - **Tailscale OAuth client** must be created at https://login.tailscale.com/admin/settings/trust-credentials with scopes: Devices/Core, General/Services, Keys/Auth Keys
-- **Secrets bootstrapped via Ansible** — `tailscale-auth` secret in `flux-system` namespace has keys `client_id` and `client_secret`. Ansible checks existence before creating (idempotent)
-- **Flux chain order**: `flux-system` → `infrastructure` (namespace + operator) → `apps` (user apps)
+- **Secrets bootstrapped via Ansible** — `tailscale-auth` secret in `flux-system` namespace has keys `client_id` and `client_secret`; `github-arc-secret` in `arc-runners` namespace has key `github_token`. Ansible checks existence before creating (idempotent)
+- **Flux chain order**: `flux-system` → `infrastructure` (namespaces + operators) → `apps` (ARC runner scale set + user apps)
 - **k3s disables traefik** — ingress must be provided separately if needed
-- **Ansible inventory** reads all vars from env vars with `default('', true)`. If TS vars empty, Tailscale namespace/secret creation is skipped
+- **Ansible inventory** reads all vars from env vars with `default('', true)`. If TS vars empty, Tailscale namespace/secret creation is skipped; if `GITHUB_ARC_PAT` empty, ARC namespace/secret creation is skipped
+- **ARC runner scale set** registers against `https://github.com/bradschwartz/public-cloud`; jobs use `runs-on: arc-runner-set`
 
 ## Exposing services
 
@@ -85,11 +93,15 @@ The Tailscale operator will expose it as a Tailscale serve/funnel. No additional
 | `ansible/roles/bootstrap/tasks/main.yml` | Swap off, kernel modules, sysctl, packages |
 | `ansible/roles/k3s/tasks/main.yml` | Install k3s, write config.yaml |
 | `ansible/roles/k3s/templates/config.yaml.j2` | k3s config: tls-san, disable traefik |
-| `ansible/roles/flux/tasks/main.yml` | Fetch kubeconfig, create tailscale ns + OAuth secret |
+| `ansible/roles/flux/tasks/main.yml` | Fetch kubeconfig, create tailscale ns + OAuth secret, arc-runners ns + PAT secret |
 | `ansible/inventory.yml` | Host vars from env lookups |
 | `infrastructure/controllers/tailscale-ns.yaml` | Namespace with privileged Pod Security label |
 | `infrastructure/controllers/tailscale-operator.yaml` | HelmRepository + HelmRelease for tailscale-operator |
-| `infrastructure/kustomization.yaml` | Kustomize: tailscale-ns + tailscale-operator |
+| `infrastructure/controllers/arc-systems-ns.yaml` | Creates arc-systems namespace |
+| `infrastructure/controllers/arc-controller.yaml` | OCI HelmRepository + HelmRelease for gha-runner-scale-set-controller |
+| `infrastructure/kustomization.yaml` | Kustomize: tailscale + arc controllers |
+| `apps/arc/arc-runners-ns.yaml` | Namespace with privileged Pod Security label |
+| `apps/arc/arc-runner-set.yaml` | OCI HelmRepository + HelmRelease for gha-runner-scale-set |
 | `clusters/raspberrypi/infrastructure.yaml` | Flux Kustomization: ./infrastructure (depends flux-system) |
 | `clusters/raspberrypi/apps.yaml` | Flux Kustomization: ./apps (depends infrastructure) |
 | `.env.example` | Documented env vars template |

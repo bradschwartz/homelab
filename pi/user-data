@@ -1,0 +1,32 @@
+#cloud-config
+manage_resolv_conf: false
+
+bootcmd:
+  - echo 'brad ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/brad
+  - chmod 440 /etc/sudoers.d/brad
+
+hostname: raspberrypi
+manage_etc_hosts: true
+packages:
+- avahi-daemon
+apt:
+  preserve_sources_list: true
+  conf: |
+    Acquire {
+      Check-Date "false";
+    };
+timezone: America/Chicago
+keyboard:
+  model: pc105
+  layout: "us"
+users:
+- name: brad
+  shell: /bin/bash
+  sudo: ALL=(ALL) NOPASSWD:ALL
+  lock_passwd: false
+  passwd: "$y$jB5$W/XFLVLHYt0QgFKSYNHH0/$OfejAfRYJScWV01vaCpZTsIvCvdNWZ0/eVnVKZwc6X8"
+  ssh_authorized_keys:
+    - "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICLbijaHKZfPL7Cg4lDHKHyDbJ+8/6mebkRL3z3Mcifi brad@MacBookPro.ht.home"
+    - "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAcxAIsJEzdbdZzsNGOraHDFounCJkvFfZix4uXLtvgX baschwartz95@gmail.com"
+enable_ssh: true
+ssh_pwauth: false
