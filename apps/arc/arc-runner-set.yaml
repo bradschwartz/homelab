@@ -28,3 +28,4 @@ spec:
   values:
     githubConfigUrl: "https://github.com/bradschwartz/public-infra"
     githubConfigSecret: github-arc-secret
+    runnerScaleSetName: raspberrypi
