@@ -21,6 +21,7 @@ spec:
     spec:
       chart: gha-runner-scale-set-controller
       version: "0.14.2"
+      reconcileStrategy: Revision
       sourceRef:
         kind: HelmRepository
         name: actions-runner-controller
