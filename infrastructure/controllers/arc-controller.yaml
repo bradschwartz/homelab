@@ -27,3 +27,4 @@ spec:
       interval: 1h
   values:
     logLevel: info
+    logFormat: json
