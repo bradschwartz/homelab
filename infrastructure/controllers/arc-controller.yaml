@@ -25,3 +25,5 @@ spec:
         kind: HelmRepository
         name: actions-runner-controller
       interval: 1h
+  values:
+    logLevel: info
