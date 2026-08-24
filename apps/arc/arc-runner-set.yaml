@@ -21,6 +21,7 @@ spec:
     spec:
       chart: gha-runner-scale-set
       version: "0.14.2"
+      reconcileStrategy: Revision
       sourceRef:
         kind: HelmRepository
         name: actions-runner-controller
@@ -29,3 +30,5 @@ spec:
     githubConfigUrl: "https://github.com/bradschwartz/public-infra"
     githubConfigSecret: github-arc-secret
     runnerScaleSetName: raspberrypi
+    logLevel: info
+    logFormat: json
