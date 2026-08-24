@@ -30,5 +30,6 @@ spec:
     githubConfigUrl: "https://github.com/bradschwartz/public-infra"
     githubConfigSecret: github-arc-secret
     runnerScaleSetName: raspberrypi
-    logLevel: info
-    logFormat: json
+    logger:
+      logLevel: "info"
+      logFormat: "json"
